@@ -3,8 +3,8 @@ library flutter_paypal_checkout;
 import 'dart:core';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_paypal_checkout/repositories/PaypalServices.dart';
-import 'package:flutter_paypal_checkout/repositories/network_error.dart';
+import 'package:flutter_paypal_easy_checkout/repositories/PaypalServices.dart';
+import 'package:flutter_paypal_easy_checkout/repositories/network_error.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 // Import for Android features.

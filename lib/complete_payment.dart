@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_paypal_checkout/repositories/PaypalServices.dart';
-import 'package:flutter_paypal_checkout/repositories/network_error.dart';
+
+import 'package:flutter_paypal_easy_checkout/repositories/PaypalServices.dart';
+import 'package:flutter_paypal_easy_checkout/repositories/network_error.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class CompletePayment extends StatefulWidget {
