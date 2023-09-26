@@ -12,6 +12,8 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+import 'complete_payment.dart';
+
 
 class UsePaypal extends StatefulWidget {
   final Function onSuccess, onCancel, onError;
@@ -108,6 +110,98 @@ class UsePaypalState extends State<UsePaypal> {
         loadingError = true;
       });
     }
+    // #docregion platform_features
+    late final PlatformWebViewControllerCreationParams params;
+    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+      params = WebKitWebViewControllerCreationParams(
+        allowsInlineMediaPlayback: true,
+        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+      );
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
+
+    final WebViewController controller =
+    WebViewController.fromPlatformCreationParams(params);
+    // #enddocregion platform_features
+
+    controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            debugPrint('WebView is loading (progress : $progress%)');
+          },
+          onPageStarted: (String url) {
+            debugPrint('Page started loading: $url');
+          },
+          onPageFinished: (String url) {
+            debugPrint('Page finished loading: $url');
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('''
+Page resource error:
+  code: ${error.errorCode}
+  description: ${error.description}
+  errorType: ${error.errorType}
+  isForMainFrame: ${error.isForMainFrame}
+          ''');
+          },
+          onNavigationRequest: (NavigationRequest request) async {
+            if (request.url.startsWith('https://www.youtube.com/')) {
+              debugPrint('blocking navigation to ${request.url}');
+              return NavigationDecision.prevent;
+            }
+            debugPrint('allowing navigation to ${request.url}');
+            if (request.url.contains(widget.returnURL)) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => CompletePayment(
+                        url: request.url,
+                        services: services,
+                        executeUrl: executeUrl,
+                        accessToken: accessToken,
+                        onSuccess: widget.onSuccess,
+                        onCancel: widget.onCancel,
+                        onError: widget.onError)),
+              );
+            }
+            if (request.url.contains(widget.cancelURL)) {
+              final uri = Uri.parse(request.url);
+              await widget.onCancel(uri.queryParameters);
+              Navigator.of(context).pop();
+            }
+            return NavigationDecision.navigate;
+          },
+          onUrlChange: (UrlChange change) {
+            debugPrint('url change to ${change.url}');
+          },
+        ),
+      )
+      ..addJavaScriptChannel(
+        'Toaster',
+        onMessageReceived: (JavaScriptMessage message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            widget.onError(message),
+          );
+        },
+      )
+      ..loadRequest(Uri.parse(checkoutUrl));
+
+    // #docregion platform_features
+    if (controller.platform is AndroidWebViewController) {
+      AndroidWebViewController.enableDebugging(true);
+      (controller.platform as AndroidWebViewController)
+          .setMediaPlaybackRequiresUserGesture(false);
+    }
+    // #enddocregion platform_features
+
+    _controller = controller;
+    setState(() {
+      loading = false;
+    });
   }
   // Enable hybrid composition.
   late final WebViewController _controller;
@@ -126,77 +220,6 @@ class UsePaypalState extends State<UsePaypal> {
           ? 'https://api.sandbox.paypal.com'
           : 'https://www.api.paypal.com';
     });
-
-      // #docregion platform_features
-      late final PlatformWebViewControllerCreationParams params;
-      if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-        params = WebKitWebViewControllerCreationParams(
-          allowsInlineMediaPlayback: true,
-          mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-        );
-      } else {
-        params = const PlatformWebViewControllerCreationParams();
-      }
-
-      final WebViewController controller =
-      WebViewController.fromPlatformCreationParams(params);
-      // #enddocregion platform_features
-
-      controller
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(const Color(0x00000000))
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onProgress: (int progress) {
-              debugPrint('WebView is loading (progress : $progress%)');
-            },
-            onPageStarted: (String url) {
-              debugPrint('Page started loading: $url');
-            },
-            onPageFinished: (String url) {
-              debugPrint('Page finished loading: $url');
-            },
-            onWebResourceError: (WebResourceError error) {
-              debugPrint('''
-Page resource error:
-  code: ${error.errorCode}
-  description: ${error.description}
-  errorType: ${error.errorType}
-  isForMainFrame: ${error.isForMainFrame}
-          ''');
-            },
-            onNavigationRequest: (NavigationRequest request) {
-              if (request.url.startsWith('https://www.youtube.com/')) {
-                debugPrint('blocking navigation to ${request.url}');
-                return NavigationDecision.prevent;
-              }
-              debugPrint('allowing navigation to ${request.url}');
-              return NavigationDecision.navigate;
-            },
-            onUrlChange: (UrlChange change) {
-              debugPrint('url change to ${change.url}');
-            },
-          ),
-        )
-        ..addJavaScriptChannel(
-          'Toaster',
-          onMessageReceived: (JavaScriptMessage message) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              widget.onError(message),
-            );
-          },
-        )
-        ..loadRequest(Uri.parse(checkoutUrl));
-
-      // #docregion platform_features
-      if (controller.platform is AndroidWebViewController) {
-        AndroidWebViewController.enableDebugging(true);
-        (controller.platform as AndroidWebViewController)
-            .setMediaPlaybackRequiresUserGesture(false);
-      }
-      // #enddocregion platform_features
-
-      _controller = controller;
     loadPayment();
   }
 

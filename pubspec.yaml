@@ -1,6 +1,6 @@
 name: flutter_paypal_easy_checkout
 description: Flutter package to integrate paypal payment gateway
-version: 1.0.0
+version: 1.0.3
 homepage: https://github.com/devprinxe/flutter_paypal_checkout
 
 environment:
