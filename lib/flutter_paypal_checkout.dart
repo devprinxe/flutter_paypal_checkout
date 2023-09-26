@@ -15,12 +15,12 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'complete_payment.dart';
 
 
-class UsePaypal extends StatefulWidget {
+class PaypalEasyCheckout extends StatefulWidget {
   final Function onSuccess, onCancel, onError;
   final String returnURL, cancelURL, note, clientId, secretKey;
   final List transactions;
   final bool sandboxMode;
-  const UsePaypal({
+  const PaypalEasyCheckout({
     Key? key,
     required this.onSuccess,
     required this.onError,
@@ -36,11 +36,11 @@ class UsePaypal extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return UsePaypalState();
+    return PaypalEasyCheckoutState();
   }
 }
 
-class UsePaypalState extends State<UsePaypal> {
+class PaypalEasyCheckoutState extends State<PaypalEasyCheckout> {
   String checkoutUrl = '';
   String navUrl = '';
   String executeUrl = '';
@@ -291,8 +291,8 @@ Page resource error:
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
             child: loading
-                ? Column(
-              children: const [
+                ? const Column(
+              children: [
                 Expanded(
                   child: Center(
                     child: SpinKitFadingCube(
