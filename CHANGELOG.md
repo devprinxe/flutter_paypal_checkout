@@ -14,3 +14,7 @@
 ## 1.0.3
 
 * Bug Fixes
+
+## 1.0.4
+
+* Bug Fixes
